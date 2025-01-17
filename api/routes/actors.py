@@ -33,7 +33,31 @@ def create_actor():
         return jsonify(err.messages), 400
 
     actor = Actor(**actor_data)
-    db.seesion.add(actor)
+    db.session.add(actor)
+    db.session.commit()
+
+    return actor_schema.dump(actor)
+
+#UPDATE
+@actors_router.put('/<actor_id>')
+def update_actor(actor_id):
+    actor = Actor.query.get(actor_id)
+
+    first_name = request.json['first_name']
+    last_name = request.json['last_name']
+
+    actor.first_name = first_name
+    actor.last_name = last_name
+
+    db.session.commit()
+
+    return actor_schema.dump(actor)
+
+#DELETE
+@actors_router.delete('/<actor_id>')
+def delete_actor(actor_id):
+    actor = Actor.query.get(actor_id)
+    db.session.delete(actor)
     db.session.commit()
 
     return actor_schema.dump(actor)

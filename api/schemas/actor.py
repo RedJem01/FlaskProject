@@ -9,5 +9,5 @@ class ActorSchema(ma.SQLAlchemyAutoSchema):
         model = Actor
 
 #Instantiate the schema for both a single actor and many actors
-actor_schema = ActorSchema
+actor_schema = ActorSchema()
 actors_schema = ActorSchema(many=True)
