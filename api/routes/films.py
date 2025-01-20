@@ -14,21 +14,14 @@ films_router = Blueprint('films', __name__, url_prefix='/films')
 def read_all_films():
     films = Film.query.all()
     for film in films:
-        film.actor = Actor.query.all()
-    return films_schema.dump(films)
+        film.serialise()
+    return films
 
 #GET requests to a specific document in the collection return a single film
 @films_router.get('/<film_id>')
 def read_film(film_id):
     film = Film.query.get(film_id)
     return film_schema.dump(film)
-
-#GET requests to a specific document in the collection return a single film
-@films_router.get('/<film_id>/actors')
-def read_film_actors(film_id):
-    film = Film.query.get(film_id)
-    actors = film.actor.get.all()
-    return film_schema.dump(actors)
 
 #POST
 #Get parsed request body, validate against schema, create new film model, insert the record, update database, serialize created film

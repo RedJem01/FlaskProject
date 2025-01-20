@@ -13,12 +13,8 @@ actors_router = Blueprint('actors', __name__, url_prefix='/actors')
 @actors_router.get('/')
 def read_all_actors():
     actors = Actor.query.all()
-    # for actor in actors:
-    #     for film_id in actor.film:
-    #         film = Film.query.get(film_id)
-    #         actor.film = film
-    print(actors_schema.dump(actors))
-    return actors_schema.dump(actors)
+    result = actors_schema.dump(actors)
+    return jsonify(result)
 
 #GET requests to a specific document in the collection return a single actor
 @actors_router.get('/<actor_id>')
@@ -27,7 +23,7 @@ def read_actor(actor_id):
     return actor_schema.dump(actor)
 
 #POST
-#Get parsed request body, validate against schema, create new actor model, insert the record, update databse, serialize created actor
+#Get parsed request body, validate against schema, create new actor model, insert the record, update database, serialize created actor
 @actors_router.post('/')
 def create_actor():
     actor_data = request.json
