@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
+from sqlalchemy import update, insert
 
 from api.config import config
 from api.models import db
-from api.models.model import Film
+from api.models.model import Film, Actor, film_actor
 from api.schemas.film import film_schema, films_schema
 
 #Create a Blueprint or module
@@ -83,6 +84,26 @@ def update_film(film_id):
     film.special_features = special_features
 
     db.session.commit()
+
+    return film_schema.dump(film)
+
+#Update film to include actor
+@films_router.put('/<film_id>/<actor_id>')
+def update_film_actors(film_id, actor_id):
+    film = Film.query.get(film_id)
+    exists = False
+    for actor in film.actor:
+        if int(actor.actor_id) == int(actor_id):
+            exists = True
+    if not exists:
+        query = insert(film_actor).values({"actor_id": actor_id, "film_id": film_id})
+
+        db.session.execute(query)
+        db.session.commit()
+    else:
+        print("That record already exists")
+
+    film = Film.query.get(film_id)
 
     return film_schema.dump(film)
 

@@ -1,10 +1,4 @@
-import json
-
-from flask import jsonify
-from sqlalchemy_serializer import SerializerMixin
-
 from api.models import db
-
 
 film_actor = db.Table(
     "film_actor",
