@@ -12,6 +12,7 @@ from api.schemas.actor import actor_schema, actors_schema
 #We can insert this into our flask app
 actors_router = Blueprint('actors', __name__, url_prefix='/actors')
 
+#Get all actors with all films by page
 @actors_router.get('/page/<page>')
 def read_all_actors(page):
     actors = Actor.query.paginate(page=int(page), per_page=config.OBJECTS_PER_PAGE, error_out=False).items
@@ -20,7 +21,7 @@ def read_all_actors(page):
     else:
         return actors_schema.dump(actors)
 
-#GET requests to a specific document in the collection return a single actor
+#Get specific actor with all films
 @actors_router.get('/<actor_id>')
 def read_actor(actor_id):
     actor = Actor.query.get(actor_id)
@@ -30,7 +31,7 @@ def read_actor(actor_id):
         return actor_schema.dump(actor)
 
 #POST
-#Get parsed request body, validate against schema, create new actor model, insert the record, update database, serialize created actor
+#Get data from request body, load into schema, make actor object, add to db
 @actors_router.post('/')
 def create_actor():
     actor_data = request.json
@@ -51,7 +52,7 @@ def create_actor():
 #             "last_name": "Stobart"
 #         }
 
-#UPDATE
+#Find actor by actor_id, take data from request body, change data in actor object to request data, commit to db
 @actors_router.put('/<actor_id>')
 def update_actor(actor_id):
     actor = Actor.query.get(actor_id)
@@ -68,7 +69,7 @@ def update_actor(actor_id):
 
         return actor_schema.dump(actor)
 
-#Update film to include actor
+#Update film_actor table to include new relationship between actor and film
 @actors_router.put('/<actor_id>/<film_id>')
 def update_actor_films(film_id, actor_id):
     actor = Actor.query.get(actor_id)
@@ -92,7 +93,7 @@ def update_actor_films(film_id, actor_id):
         else:
             return actor_schema.dump(actor)
 
-#DELETE
+#Find actor, delete actor
 @actors_router.delete('/<actor_id>')
 def delete_actor(actor_id):
     actor = Actor.query.get(actor_id)

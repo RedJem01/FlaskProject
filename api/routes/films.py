@@ -11,7 +11,7 @@ from api.schemas.film import film_schema, films_schema
 #We can insert this into our flask app
 films_router = Blueprint('films', __name__, url_prefix='/films')
 
-#GET requests to the collection return a list of all films in the database
+#Get all films with all actors by page
 @films_router.get('/page/<page>')
 def read_all_films(page):
     films = Film.query.paginate(page=int(page), per_page=config.OBJECTS_PER_PAGE, error_out=False).items
@@ -20,7 +20,7 @@ def read_all_films(page):
     else:
         return films_schema.dump(films)
 
-#GET requests to a specific document in the collection return a single film
+#Get specific film with all actors
 @films_router.get('/<film_id>')
 def read_film(film_id):
     film = Film.query.get(film_id)
@@ -30,7 +30,7 @@ def read_film(film_id):
         return film_schema.dump(film)
 
 #POST
-#Get parsed request body, validate against schema, create new film model, insert the record, update database, serialize created film
+#Get data from request body, load into schema, make film object, add to db
 @films_router.post('/')
 def create_film():
     film_data = request.json
@@ -60,7 +60,7 @@ def create_film():
 # #     "title": "mov"
 # # }
 
-# UPDATE
+#Find film by film_id, take data from request body, change data in film object to request data, commit to db
 @films_router.put('/<film_id>')
 def update_film(film_id):
     film = Film.query.get(film_id)
@@ -95,8 +95,8 @@ def update_film(film_id):
 
         return film_schema.dump(film)
 
-#Update film to include actor
-@films_router.put('/<film_id>/<actor_id>')
+#Update film_actor table to include new relationship between film and actor
+@films_router.patch('/<film_id>/<actor_id>')
 def update_film_actors(film_id, actor_id):
     film = Film.query.get(film_id)
     exists = False
@@ -117,7 +117,7 @@ def update_film_actors(film_id, actor_id):
     else:
         return jsonify({"error": "That record already exists"})
 
-#DELETE
+#Find film, delete film
 @films_router.delete('/<film_id>')
 def delete_film(film_id):
     film = Film.query.get(film_id)
