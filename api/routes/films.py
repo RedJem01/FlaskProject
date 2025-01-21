@@ -4,7 +4,7 @@ from sqlalchemy import update, insert
 
 from api.config import config
 from api.models import db
-from api.models.model import Film, Actor, film_actor
+from api.models.film import Film, film_actor
 from api.schemas.film import film_schema, films_schema
 
 #Create a Blueprint or module
@@ -12,16 +12,22 @@ from api.schemas.film import film_schema, films_schema
 films_router = Blueprint('films', __name__, url_prefix='/films')
 
 #GET requests to the collection return a list of all films in the database
-@films_router.get('/')
-def read_all_films():
-    films = Film.query.paginate(page=1, per_page=config.OBJECTS_PER_PAGE, error_out=False).items
-    return films_schema.dump(films)
+@films_router.get('/page/<page>')
+def read_all_films(page):
+    films = Film.query.paginate(page=int(page), per_page=config.OBJECTS_PER_PAGE, error_out=False).items
+    if not films:
+        return jsonify({"error": "No films exist"})
+    else:
+        return films_schema.dump(films)
 
 #GET requests to a specific document in the collection return a single film
 @films_router.get('/<film_id>')
 def read_film(film_id):
     film = Film.query.get(film_id)
-    return film_schema.dump(film)
+    if not film:
+        return jsonify({"error": "That film doesn't exist"})
+    else:
+        return film_schema.dump(film)
 
 #POST
 #Get parsed request body, validate against schema, create new film model, insert the record, update database, serialize created film
@@ -58,34 +64,36 @@ def create_film():
 @films_router.put('/<film_id>')
 def update_film(film_id):
     film = Film.query.get(film_id)
+    if not film:
+        return jsonify({"error": "That film doesn't exist"})
+    else:
+        title = request.json['title']
+        description = request.json['description']
+        release_year = request.json['release_year']
+        language_id = request.json['language_id']
+        original_language_id = request.json['original_language_id']
+        rental_duration = request.json['rental_duration']
+        rental_rate = request.json['rental_rate']
+        length = request.json['length']
+        replacement_cost = request.json['replacement_cost']
+        rating = request.json['rating']
+        special_features = request.json['special_features']
 
-    title = request.json['title']
-    description = request.json['description']
-    release_year = request.json['release_year']
-    language_id = request.json['language_id']
-    original_language_id = request.json['original_language_id']
-    rental_duration = request.json['rental_duration']
-    rental_rate = request.json['rental_rate']
-    length = request.json['length']
-    replacement_cost = request.json['replacement_cost']
-    rating = request.json['rating']
-    special_features = request.json['special_features']
+        film.title = title
+        film.description = description
+        film.release_year = release_year
+        film.language_id = language_id
+        film.original_language_id = original_language_id
+        film.rental_duration = rental_duration
+        film.rental_rate = rental_rate
+        film.length = length
+        film.replacement_cost = replacement_cost
+        film.rating = rating
+        film.special_features = special_features
 
-    film.title = title
-    film.description = description
-    film.release_year = release_year
-    film.language_id = language_id
-    film.original_language_id = original_language_id
-    film.rental_duration = rental_duration
-    film.rental_rate = rental_rate
-    film.length = length
-    film.replacement_cost = replacement_cost
-    film.rating = rating
-    film.special_features = special_features
+        db.session.commit()
 
-    db.session.commit()
-
-    return film_schema.dump(film)
+        return film_schema.dump(film)
 
 #Update film to include actor
 @films_router.put('/<film_id>/<actor_id>')
@@ -100,18 +108,23 @@ def update_film_actors(film_id, actor_id):
 
         db.session.execute(query)
         db.session.commit()
+
+        film = Film.query.get(film_id)
+        if not film:
+            return jsonify({"error": "That film doesn't exist"})
+        else:
+            return film_schema.dump(film)
     else:
-        print("That record already exists")
-
-    film = Film.query.get(film_id)
-
-    return film_schema.dump(film)
+        return jsonify({"error": "That record already exists"})
 
 #DELETE
 @films_router.delete('/<film_id>')
 def delete_film(film_id):
     film = Film.query.get(film_id)
-    db.session.delete(film)
-    db.session.commit()
+    if not film:
+        return jsonify({"error": "That film doesn't exist"})
+    else:
+        db.session.delete(film)
+        db.session.commit()
 
-    return film_schema.dump(film)
+        return film_schema.dump(film)

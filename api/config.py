@@ -3,7 +3,7 @@ import os
 class Config(object):
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    OBJECTS_PER_PAGE = 3
+    OBJECTS_PER_PAGE = 50
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI')

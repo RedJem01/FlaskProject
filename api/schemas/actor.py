@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import fields
 
-from api.models.model import Actor
+from api.models.actor import Actor
 from api.schemas import ma
 
 

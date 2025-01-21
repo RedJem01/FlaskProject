@@ -4,24 +4,30 @@ from sqlalchemy import insert
 
 from api.config import config
 from api.models import db
-from api.models.model import Actor, film_actor
+from api.models.actor import Actor
+from api.models.film import film_actor
 from api.schemas.actor import actor_schema, actors_schema
 
 #Create a Blueprint or module
 #We can insert this into our flask app
 actors_router = Blueprint('actors', __name__, url_prefix='/actors')
 
-#GET requests to the collection return a list of all actors in the database
-@actors_router.get('/')
-def read_all_actors():
-    actors = Actor.query.paginate(page=1, per_page=config.OBJECTS_PER_PAGE, error_out=False).items
-    return actors_schema.dump(actors)
+@actors_router.get('/page/<page>')
+def read_all_actors(page):
+    actors = Actor.query.paginate(page=int(page), per_page=config.OBJECTS_PER_PAGE, error_out=False).items
+    if not actors:
+        return jsonify({"error": "No actors exist"})
+    else:
+        return actors_schema.dump(actors)
 
 #GET requests to a specific document in the collection return a single actor
 @actors_router.get('/<actor_id>')
 def read_actor(actor_id):
     actor = Actor.query.get(actor_id)
-    return actor_schema.dump(actor)
+    if not actor:
+        return jsonify({"error": "That actor doesn't exist"})
+    else:
+        return actor_schema.dump(actor)
 
 #POST
 #Get parsed request body, validate against schema, create new actor model, insert the record, update database, serialize created actor
@@ -40,45 +46,60 @@ def create_actor():
 
     return actor_schema.dump(actor)
 
+# {
+#             "first_name": "Jemima",
+#             "last_name": "Stobart"
+#         }
+
 #UPDATE
 @actors_router.put('/<actor_id>')
 def update_actor(actor_id):
     actor = Actor.query.get(actor_id)
+    if not actor:
+        return jsonify({"error": "That actor doesn't exist"})
+    else:
+        first_name = request.json['first_name']
+        last_name = request.json['last_name']
 
-    first_name = request.json['first_name']
-    last_name = request.json['last_name']
+        actor.first_name = first_name
+        actor.last_name = last_name
 
-    actor.first_name = first_name
-    actor.last_name = last_name
+        db.session.commit()
 
-    db.session.commit()
-
-    return actor_schema.dump(actor)
+        return actor_schema.dump(actor)
 
 #Update film to include actor
 @actors_router.put('/<actor_id>/<film_id>')
 def update_actor_films(film_id, actor_id):
     actor = Actor.query.get(actor_id)
-    exists = False
-    for film in actor.film:
-        if int(film.film_id) == int(film_id):
-            exists = True
-    if not exists:
-        query = (insert(film_actor).values({"actor_id": actor_id, "film_id": film_id}))
-        db.session.execute(query)
-        db.session.commit()
+    if not actor:
+        return jsonify({"error": "That actor doesn't exist"})
     else:
-        print("That record already exists")
+        exists = False
+        for film in actor.film:
+            if int(film.film_id) == int(film_id):
+                exists = True
+        if not exists:
+            query = (insert(film_actor).values({"actor_id": actor_id, "film_id": film_id}))
+            db.session.execute(query)
+            db.session.commit()
+        else:
+            print("That record already exists")
 
-    actor = Actor.query.get(actor_id)
-
-    return actor_schema.dump(actor)
+        actor = Actor.query.get(actor_id)
+        if not actor:
+            return jsonify({"error": "That actor doesn't exist"})
+        else:
+            return actor_schema.dump(actor)
 
 #DELETE
 @actors_router.delete('/<actor_id>')
 def delete_actor(actor_id):
     actor = Actor.query.get(actor_id)
-    db.session.delete(actor)
-    db.session.commit()
+    if not actor:
+        return jsonify({"error": "That actor doesn't exist"})
+    else:
+        db.session.delete(actor)
+        db.session.commit()
 
-    return actor_schema.dump(actor)
+        return actor_schema.dump(actor)

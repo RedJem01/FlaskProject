@@ -1,4 +1,4 @@
-from api.models.model import Film
+from api.models.film import Film
 from api.schemas import ma
 
 from marshmallow_sqlalchemy import fields

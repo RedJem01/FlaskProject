@@ -1,3 +1,5 @@
+from sqlalchemy.orm import validates
+
 from api.models import db
 
 film_actor = db.Table(
@@ -5,13 +7,6 @@ film_actor = db.Table(
     db.Column("actor_id", db.Integer, db.ForeignKey("actor.actor_id")),
     db.Column("film_id", db.Integer, db.ForeignKey("film.film_id")))
 
-#A model of our actor table
-# @dataclasses.dataclass
-class Actor(db.Model):
-    actor_id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(255), nullable=False)
-    last_name = db.Column(db.String(255), nullable=False)
-    film = db.relationship('Film', secondary=film_actor, back_populates='actor', cascade='all, delete')
 
 #A model of our actor table
 # @dataclasses.dataclass
@@ -29,3 +24,7 @@ class Film(db.Model):
     rating = db.Column(db.String(255), nullable=False)
     special_features = db.Column(db.String(255), nullable=False)
     actor = db.relationship('Actor', secondary=film_actor, back_populates='film', cascade='all, delete')
+
+    @validates('title')
+    def convert_upper(self, key, value):
+        return value.upper()
