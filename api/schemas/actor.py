@@ -11,7 +11,7 @@ class ActorSchema(ma.SQLAlchemyAutoSchema):
         model = Actor
         fields = ("actor_id", "first_name", "last_name", "film")
 
-    # film = fields.Nested('FilmSchema', many = True)
+    film = fields.Nested('FilmSchema', many=True, exclude=('actor',))
 
 #Instantiate the schema for both a single actor and many actors
 actor_schema = ActorSchema()

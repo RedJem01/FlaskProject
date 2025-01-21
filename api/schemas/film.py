@@ -13,7 +13,7 @@ class FilmSchema(ma.SQLAlchemyAutoSchema):
                   "release_year", "rental_duration", "rental_rate", "replacement_cost",
                   "special_features", "title", "actor")
 
-    # actor = fields.Nested('ActorSchema', many=True)
+    actor = fields.Nested('ActorSchema', many=True, exclude=('film',))
 
 #Instantiate the schema for both a single film and many films
 film_schema = FilmSchema()

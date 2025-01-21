@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
+from api.config import config
 from api.models import db
-from api.models.model import Actor, Film
+from api.models.model import Actor
 from api.schemas.actor import actor_schema, actors_schema
 
 #Create a Blueprint or module
@@ -12,9 +13,8 @@ actors_router = Blueprint('actors', __name__, url_prefix='/actors')
 #GET requests to the collection return a list of all actors in the database
 @actors_router.get('/')
 def read_all_actors():
-    actors = Actor.query.all()
-    result = actors_schema.dump(actors)
-    return jsonify(result)
+    actors = Actor.query.paginate(page=1, per_page=config.OBJECTS_PER_PAGE, error_out=False).items
+    return actors_schema.dump(actors)
 
 #GET requests to a specific document in the collection return a single actor
 @actors_router.get('/<actor_id>')

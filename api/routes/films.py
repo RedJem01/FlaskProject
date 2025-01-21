@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
+from api.config import config
 from api.models import db
-from api.models.model import Film, Actor
+from api.models.model import Film
 from api.schemas.film import film_schema, films_schema
 
 #Create a Blueprint or module
@@ -12,10 +13,8 @@ films_router = Blueprint('films', __name__, url_prefix='/films')
 #GET requests to the collection return a list of all films in the database
 @films_router.get('/')
 def read_all_films():
-    films = Film.query.all()
-    for film in films:
-        film.serialise()
-    return films
+    films = Film.query.paginate(page=1, per_page=config.OBJECTS_PER_PAGE, error_out=False).items
+    return films_schema.dump(films)
 
 #GET requests to a specific document in the collection return a single film
 @films_router.get('/<film_id>')
@@ -40,7 +39,21 @@ def create_film():
 
     return film_schema.dump(film)
 
-#UPDATE
+#{
+# #    "description": "description of movie",
+# #     "language_id": 1,
+# #     "length": 79,
+# #     "original_language_id": null,
+# #     "rating": "PG",
+# #     "release_year": 2001,
+# #     "rental_duration": 3,
+# #     "rental_rate": 0.97,
+# #     "replacement_cost": 15.67,
+# #     "special_features": "Deleted Scenes,Behind the Scenes",
+# #     "title": "mov"
+# # }
+
+# UPDATE
 @films_router.put('/<film_id>')
 def update_film(film_id):
     film = Film.query.get(film_id)
@@ -68,8 +81,6 @@ def update_film(film_id):
     film.replacement_cost = replacement_cost
     film.rating = rating
     film.special_features = special_features
-
-
 
     db.session.commit()
 
